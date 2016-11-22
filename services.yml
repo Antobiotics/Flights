@@ -1,0 +1,14 @@
+PostgreSQL:
+  restart: always
+  image: sameersbn/postgresql:9.5-3
+  ports:
+    - "5432:5432"
+  environment:
+    - DEBUG=false
+
+    - DB_USER=docker
+    - DB_PASS=docker
+    - DB_NAME=bts_ontime
+    - constraint:role==storage
+  volumes:
+    - /srv/docker/postgresql:/var/lib/postgresql

@@ -1,0 +1,22 @@
+# R
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+
+# Outputs
+*.png
+
+# Notebook
+Notebook.nb.html
+Spot/Notebook.nb.html
+Spot/Notebook_files/
+
+# Spark
+log4j*
+
+# Logs
+*.log
+
+# Data sets
+data/
