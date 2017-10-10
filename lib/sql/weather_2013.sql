@@ -1,4 +1,4 @@
-CREATE TABLE weather__2013 (
+CREATE TABLE IF NOT EXISTS weather (
 "stn" varchar(256),
 "wban" varchar(256),
 "year" varchar(256),

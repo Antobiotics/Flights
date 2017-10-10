@@ -1,7 +1,8 @@
-create index "Date" on flights("Year", "Month", "DayofMonth");
-create index "Origin" on flights("Origin");
-create index "Dest" on flights("Dest");
-create index "UniqueCarrier" on flights("UniqueCarrier");
-create index "Year" on flights("Year");
-create index "FlightNum" on flights("FlightNum");
+create index "date" on flights("year", "month", "dayof_month");
+create index "drigin" on flights("origin");
+create index "dest" on flights("dest");
+create index "uniquecarrier" on flights("uniquecarrier");
+create index "year" on flights("year");
+create index "flightnum" on flights("flightnum");
 analyze;
+

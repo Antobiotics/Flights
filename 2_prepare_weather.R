@@ -1,9 +1,8 @@
-
 source('./lib/utils.R')
 
-GetDataset <- function() {
+GetDataset <- function(year) {
   system(
-    "./lib/get_weather_data.sh"
+    "./lib/get_weather_data.sh " %+% year
   )
 }
 
@@ -38,9 +37,9 @@ ReadGsod <- function(f) {
   return(metrics)
 }
 
-CreateWeatherTable <- function() {
-  dbSendQuery(connection,
-              "DROP TABLE IF EXISTS weather__2013")
+CopyToWeatherTable <- function(year) {
+  #dbSendQuery(connection,
+  #            "DROP TABLE IF EXISTS weather__2013")
 
   create.table.statements <-
     paste(readLines("./lib/sql/weather_2013.sql"), collapse = " ")
@@ -49,42 +48,45 @@ CreateWeatherTable <- function() {
   dbSendQuery(connection, create.table.statements)
 
   copy.statement <-
-    sprintf("COPY weather__2013 FROM '%s/data/2013__noaa_gsod", getwd()) %+%
+    sprintf("COPY weather FROM '%s/data/%s__noaa_gsod", getwd(), year) %+%
     "' WITH DELIMITER ',' CSV HEADER;"
 
   print("Copying data to table")
   dbSendQuery(connection, copy.statement)
 }
 
-RemoveDataset <- function() {
-  system(
-
-  )
+RemoveDataset <- function(year) {
+  system()
 }
 
-GetDataset()
+CopyYearlyWeatherDataToPG <- function(year) {
+  GetDataset(year)
+  filenames <- sprintf("./data/tmp/gsod_%s/", year) %+%
+    list.files(path = sprintf("./data/tmp/gsod_%s/", year))
 
-filenames <- "./data/tmp/gsod_2013/" %+% list.files(path = "./data/tmp/gsod_2013/")
+  # Chunking is required here, otherwise for some yet unknown
+  # reasons the size of the data set grows exponentially after
+  # some number of files are aggregated.
+  # Same phenomenon happens both the aggregated file is
+  # stored in memory or in the filesystem..
+  # (Scatter plot: num_aggregated files / final obj size | Size per file)
+  master <- ReadGsod(filenames[1])
+  for (i in chunk(from = 2, to = length(filenames), by = 100)) {
+    print(sprintf('Aggregating data from %s to %s', min(i), max(i)))
+    # We could parallelize that...
+    plyr::llply(min(i):max(i),
+                function(it) {
+                  tmp.data <- ReadGsod(filenames[it])
+                  master <<- rbind(master, tmp.data)
+                  rm(tmp.data)
+                }, .progress = "text"
+    )
+  }
+  print(head(master))
+  write.csv(x=master, file= sprintf('./data/%s__noaa_gsod"', year))
 
-
-# Chunking is required here, otherwise for some yet unknown
-# reasons the size of the data set grows exponentially after
-# some number of files are aggregated.
-# Same phenomenon happens both the aggregated file is
-# stored in memory or in the filesystem..
-# (Scatter plot: num_aggregated files / final obj size | Size per file)
-master <- ReadGsod(filenames[1])
-for (i in chunk(from = 2, to = length(filenames), by = 100)) {
-  print(sprintf('Aggregating data from %s to %s', min(i), max(i)))
-  # We could parallelize that...
-  plyr::llply(min(i):max(i),
-              function(it) {
-                tmp.data <- ReadGsod(filenames[it])
-                master <<- rbind(master, tmp.data)
-                rm(tmp.data)
-              }, .progress = "text"
-  )
+  CopyToWeatherTable(year)
+  RemoveDataset(year)
 }
 
-CreateWeatherTable()
-RemoveDataset()
+CopyYearlyWeatherDataToPG("2013")

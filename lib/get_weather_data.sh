@@ -1,7 +1,7 @@
 #!/bin/bash
-
-ARCHIVE_BASE_NAME="gsod_2013"
-URL="ftp://ftp.ncdc.noaa.gov/pub/data/gsod/2013/$ARCHIVE_BASE_NAME.tar"
+YEAR="2013"
+ARCHIVE_BASE_NAME="gsod_""${YEAR}"
+URL="ftp://ftp.ncdc.noaa.gov/pub/data/gsod/"${YEAR}"/$ARCHIVE_BASE_NAME.tar"
 TMP_DATA_DIR="./data/tmp"
 WEATHER_DATA_DIR="$TMP_DATA_DIR"/"$ARCHIVE_BASE_NAME"
 
